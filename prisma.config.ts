@@ -3,6 +3,13 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const envKeys = Object.keys(process.env).filter(k => 
+  k.includes('URL') || k.includes('POSTGRES') || k.includes('PRISMA') || k.includes('STORAGE') || k.includes('DB')
+);
+console.log('--- VERCEL ENV VARIABLES DEBUG ---');
+console.log('Found these database-related keys: ', envKeys);
+console.log('--- END DEBUG ---');
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
