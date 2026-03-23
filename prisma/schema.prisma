@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  comparePrice Float?
+  sku          String        @unique
+  stock        Int           @default(0)
+  lowStockAt   Int           @default(10)
+  status       String        @default("active")
+  image        String?
+  categoryId   String?
+  category     Category?     @relation(fields: [categoryId], references: [id])
+  b2bEnabled   Boolean       @default(true)
+  b2cEnabled   Boolean       @default(true)
+  bulkPricing  BulkPricing[]
+  orderItems   OrderItem[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model BulkPricing {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty    Int
+  maxQty    Int?
+  price     Float
+}
+
+model Company {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phone        String?
+  address      String?
+  creditLimit  Float      @default(0)
+  paymentTerms String     @default("Net 30")
+  status       String     @default("active")
+  customers    Customer[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  address   String?
+  type      String   @default("b2c")
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  type          String      @default("b2c")
+  status        String      @default("pending")
+  subtotal      Float
+  tax           Float       @default(0)
+  shipping      Float       @default(0)
+  total         Float
+  paymentMethod String?
+  paymentStatus String      @default("pending")
+  notes         String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  total     Float
+}
+
+model Discount {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  type        String   @default("percentage")
+  value       Float
+  minOrder    Float?
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  targetType  String   @default("all")
+  isActive    Boolean  @default(true)
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
